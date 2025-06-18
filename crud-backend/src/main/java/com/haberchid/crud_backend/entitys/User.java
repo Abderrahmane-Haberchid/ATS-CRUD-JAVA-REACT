@@ -14,6 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Table(name = "_user")
 public class User {
     @Id
     private UUID userId;
@@ -21,6 +22,6 @@ public class User {
     @Column(unique = true)
     private String email;
     private String password;
-    @ManyToOne
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Product> productList;
 }
