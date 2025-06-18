@@ -4,6 +4,7 @@ import com.haberchid.crud_backend.enumeration.Category;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.OneToMany;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,4 +26,6 @@ public class Product {
     private Category category;
     private Date createdAt;
     private Date updatedAt;
+    @OneToMany
+    private User user;
 }
