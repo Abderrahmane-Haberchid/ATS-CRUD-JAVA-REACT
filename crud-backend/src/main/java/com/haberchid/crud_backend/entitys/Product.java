@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.UUID;
 
 @Entity
-@Data
+@Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -21,9 +21,4 @@ public class Product {
     private Category category;
     private Date createdAt;
     private Date updatedAt;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = false)
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    private User user;
 }

@@ -10,5 +10,4 @@ import java.util.UUID;
 public record UserDto (UUID userId,
                        String name,
                        String email,
-                       String password,
-                       List<Product> productList) { }
+                       String password) { }

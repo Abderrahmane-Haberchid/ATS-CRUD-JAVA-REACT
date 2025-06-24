@@ -5,6 +5,9 @@ import com.haberchid.crud_backend.entitys.Product;
 import lombok.Builder;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class ProductMapper {
 
@@ -16,7 +19,6 @@ public class ProductMapper {
                 .category(productDto.category())
                 .createdAt(productDto.createdAt())
                 .updatedAt(productDto.updatedAt())
-                .user(productDto.user())
                 .build();
     }
 
@@ -28,7 +30,15 @@ public class ProductMapper {
                 .category(product.getCategory())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
-                .user(product.getUser())
                 .build();
+    }
+
+    public List<ProductDto> productListToDto(List<Product> productList){
+        List<ProductDto> productDtoList = new ArrayList<>();
+        productList.forEach(product -> {
+            productDtoList.add(productToDto(product));
+        });
+
+        return productDtoList;
     }
 }
