@@ -13,8 +13,6 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${security.jwt.token.secret-key}")
-    private String jwtSecret;
 
 
     public String generateToken(UserDetails userDetails) {
@@ -22,7 +20,7 @@ public class JwtService {
                 .withSubject(userDetails.getUsername())
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + 1000000))
-                .sign(Algorithm.HMAC256(jwtSecret));
+                .sign(Algorithm.HMAC256("secretKey"));
     }
 
 
@@ -48,6 +46,6 @@ public class JwtService {
 
     // Create JWT verifier instance
     private JWTVerifier getVerifier() {
-        return JWT.require(Algorithm.HMAC256(jwtSecret)).build();
+        return JWT.require(Algorithm.HMAC256("secretKey")).build();
     }
 }

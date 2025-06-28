@@ -21,9 +21,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Value("${security.jwt.token.secret-key:secret-key}")
-    private String secretKey;
-
     private final UserDetailsService userDetailsService;
 
     @Override
@@ -44,7 +41,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             // Validate and extract username/email
-            userEmail = JWT.require(Algorithm.HMAC256(secretKey))
+            userEmail = JWT.require(Algorithm.HMAC256("secretKey"))
                     .build()
                     .verify(jwtToken)
                     .getSubject();

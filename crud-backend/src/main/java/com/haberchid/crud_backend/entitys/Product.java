@@ -14,6 +14,7 @@ import java.util.UUID;
 @Builder
 public class Product {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID productId;
     private String title;
     private String description;

@@ -13,6 +13,5 @@ public record ProductDto(UUID productId,
                          String description,
                          Category category,
                          Date createdAt,
-                         Date updatedAt,
-                         User user) {
+                         Date updatedAt) {
 }

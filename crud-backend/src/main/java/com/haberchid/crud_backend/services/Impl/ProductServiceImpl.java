@@ -19,7 +19,6 @@ import java.util.UUID;
 public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
     private final ProductMapper productMapper;
 
     @Override
