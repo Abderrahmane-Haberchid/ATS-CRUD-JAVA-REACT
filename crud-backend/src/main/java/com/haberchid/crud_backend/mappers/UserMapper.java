@@ -2,10 +2,15 @@ package com.haberchid.crud_backend.mappers;
 
 import com.haberchid.crud_backend.dto.UserDto;
 import com.haberchid.crud_backend.entitys.User;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class UserMapper {
+
+    private final PasswordEncoder passwordEncoder;
 
     public UserDto userToDto(User user){
         return UserDto.builder()
@@ -21,7 +26,7 @@ public class UserMapper {
                 .userId(userDto.userId())
                 .name(userDto.name())
                 .email(userDto.email())
-                .password(userDto.password())
+                .password(passwordEncoder.encode(userDto.password()))
                 .build();
     }
 }

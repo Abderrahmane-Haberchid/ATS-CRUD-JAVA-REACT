@@ -1,51 +1,56 @@
 package com.haberchid.crud_backend.services;
 
 
-import com.haberchid.crud_backend.config.UserAuthenticationProvider;
 import com.haberchid.crud_backend.dto.AuthenticationResponseDto;
 import com.haberchid.crud_backend.dto.CredentialsDto;
 import com.haberchid.crud_backend.dto.UserDto;
 import com.haberchid.crud_backend.mappers.UserMapper;
 import com.haberchid.crud_backend.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.nio.CharBuffer;
-
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthenticationService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final UserAuthenticationProvider userAuthenticationProvider;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
-    public UserDto authenticate(CredentialsDto credentialsDto){
-        var userDto = findByEmail(credentialsDto.email());
-        if(passwordEncoder.matches(CharBuffer.wrap(credentialsDto.password()), userDto.password()))
-            return userDto;
-        else
-            throw new RuntimeException("Password invalid");
+    public AuthenticationResponseDto authenticate(CredentialsDto credentialsDto){
+        try {
+            UserDetails userDetails = userDetailsService.loadUserByUsername(credentialsDto.email());
+            log.warn("Here is userDetail object content ===> "+userDetails.toString());
+            if (passwordEncoder.matches(credentialsDto.password(), userDetails.getPassword())){
+                log.warn("UserDetails password after checking ====> "+userDetails.getPassword());
+                return AuthenticationResponseDto.builder()
+                        .userDetails(userDetails)
+                        .jwt(jwtService.generateToken(userDetails))
+                        .build();
+            }
+            else
+                return null;
+        } catch (UsernameNotFoundException e) {
+            throw new BadCredentialsException("Invalid credentials", e);
+        }
 
-    }
-
-    public UserDto findByEmail(String email){
-        var user = userRepository.findByEmail(email);
-        if (user != null)
-            return userMapper.userToDto(user);
-        else
-            throw new RuntimeException("Invalid Logins");
     }
 
     public AuthenticationResponseDto register(UserDto userDto){
 
-        var user = userRepository.save(userMapper.dtoToUser(userDto));
-
+        UserDetails userDetails = userRepository.save(userMapper.dtoToUser(userDto));
         return AuthenticationResponseDto.builder()
-                .email(user.getEmail())
-                .jwt(userAuthenticationProvider.createToken(user.getEmail()))
+                .userDetails(userDetails)
+                .jwt(jwtService.generateToken(userDetails))
                 .build();
     }
 }

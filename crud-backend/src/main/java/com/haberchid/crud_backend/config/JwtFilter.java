@@ -1,56 +1,69 @@
 package com.haberchid.crud_backend.config;
 
 import com.auth0.jwt.JWT;
-import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.haberchid.crud_backend.dto.UserDto;
-import com.haberchid.crud_backend.services.AuthenticationService;
+import com.auth0.jwt.exceptions.JWTVerificationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.stereotype.Component;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
 
-@Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
     @Value("${security.jwt.token.secret-key:secret-key}")
     private String secretKey;
 
-    private final AuthenticationService authenticationService;
-    private final UserAuthenticationProvider userAuthenticationProvider;
+    private final UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest httpServletRequest,
-                                    HttpServletResponse httpServletResponse,
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String header = httpServletRequest.getHeader(HttpHeaders.AUTHORIZATION);
+        final String authHeader = request.getHeader("Authorization");
+        final String jwtToken;
+        final String userEmail;
 
-        if (header != null) {
-            Algorithm algorithm = Algorithm.HMAC256(secretKey);
-
-            JWTVerifier verifier = JWT.require(algorithm)
-                    .build();
-
-            DecodedJWT decoded = verifier.verify(header);
-
-            UserDto user = authenticationService.findByEmail(decoded.getIssuer());
-
-            return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            filterChain.doFilter(request, response);
+            return;
         }
-        else return null;
 
-        filterChain.doFilter(httpServletRequest, httpServletResponse);
+        jwtToken = authHeader.substring(7);
+
+        try {
+            // Validate and extract username/email
+            userEmail = JWT.require(Algorithm.HMAC256(secretKey))
+                    .build()
+                    .verify(jwtToken)
+                    .getSubject();
+
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+        } catch (JWTVerificationException e) {
+            // Optionally log or handle invalid/expired token
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        filterChain.doFilter(request, response);
     }
 }

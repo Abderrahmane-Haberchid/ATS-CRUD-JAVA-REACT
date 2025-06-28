@@ -20,6 +20,7 @@ import java.util.UUID;
 @Table(name = "_user")
 public class User implements UserDetails {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID userId;
     private String name;
     @Column(unique = true)
