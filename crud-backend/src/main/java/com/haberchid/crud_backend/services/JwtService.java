@@ -13,8 +13,6 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-
-
     public String generateToken(UserDetails userDetails) {
         return JWT.create()
                 .withSubject(userDetails.getUsername())
@@ -23,29 +21,4 @@ public class JwtService {
                 .sign(Algorithm.HMAC256("secretKey"));
     }
 
-
-    public String extractUsername(String token) {
-        return getVerifier().verify(token).getSubject();
-    }
-
-
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        try {
-            String username = extractUsername(token);
-            return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
-        } catch (JWTVerificationException e) {
-            return false;  // invalid signature or token expired
-        }
-    }
-
-
-    private boolean isTokenExpired(String token) {
-        Date expiration = getVerifier().verify(token).getExpiresAt();
-        return expiration.before(new Date());
-    }
-
-    // Create JWT verifier instance
-    private JWTVerifier getVerifier() {
-        return JWT.require(Algorithm.HMAC256("secretKey")).build();
-    }
 }

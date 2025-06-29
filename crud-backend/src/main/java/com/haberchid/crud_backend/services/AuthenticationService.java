@@ -29,9 +29,7 @@ public class AuthenticationService {
     public AuthenticationResponseDto authenticate(CredentialsDto credentialsDto){
         try {
             UserDetails userDetails = userDetailsService.loadUserByUsername(credentialsDto.email());
-            log.warn("Here is userDetail object content ===> "+userDetails.toString());
             if (passwordEncoder.matches(credentialsDto.password(), userDetails.getPassword())){
-                log.warn("UserDetails password after checking ====> "+userDetails.getPassword());
                 return AuthenticationResponseDto.builder()
                         .userDetails(userDetails)
                         .jwt(jwtService.generateToken(userDetails))
